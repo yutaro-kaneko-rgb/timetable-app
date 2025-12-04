@@ -557,6 +557,8 @@
                     <label for="weekStartDate">週の開始日（月曜日）を選択：</label>
                     <input type="date" id="weekStartDate">
                     <button class="btn btn-primary" onclick="displayWeekSchedule()">表示</button>
+                    <button class="btn btn-secondary" onclick="showPreviousWeek()">前週</button>
+                    <button class="btn btn-secondary" onclick="showThisWeek()">今週</button>
                     <button class="btn btn-secondary" onclick="showNextWeek()">翌週</button>
                 </div>
                 <h2 id="weekDisplayTitle" style="margin-bottom: 20px; color: #333;"></h2>
@@ -1394,6 +1396,38 @@
             
             localStorage.setItem('classMemos', JSON.stringify(memos));
             await saveToFirebase('memos', { memos: memos });
+        }
+        
+        // 前週を表示
+        function showPreviousWeek() {
+            const dateInput = document.getElementById('weekStartDate');
+            let currentDate = dateInput.value;
+            
+            if (!currentDate) {
+                // 日付が未設定の場合は今日から前週を計算
+                const today = getTodayJST();
+                const [year, month, day] = today.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                date.setDate(date.getDate() - 7);
+                currentDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            } else {
+                // 現在の日付から7日前
+                const [year, month, day] = currentDate.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                date.setDate(date.getDate() - 7);
+                currentDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            }
+            
+            dateInput.value = currentDate;
+            displayWeekSchedule();
+        }
+        
+        // 今週を表示
+        function showThisWeek() {
+            const dateInput = document.getElementById('weekStartDate');
+            const today = getTodayJST();
+            dateInput.value = today;
+            displayWeekSchedule();
         }
         
         // 翌週を表示
