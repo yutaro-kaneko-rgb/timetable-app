@@ -220,10 +220,24 @@
         }
         
         .schedule-item {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 10px;
             padding: 8px;
             background: #f8f9fa;
             border-radius: 6px;
             transition: all 0.3s;
+        }
+        
+        .schedule-left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .schedule-right {
+            display: flex;
+            align-items: center;
         }
         
         .schedule-item:hover {
@@ -278,16 +292,17 @@
             font-size: 13px;
         }
         
-        .memo-inline {
-            flex: 2;
-            padding: 4px 8px;
+        .memo-right {
+            width: 100%;
+            padding: 8px;
             border: 1px solid #dee2e6;
-            border-radius: 3px;
-            font-size: 12px;
+            border-radius: 4px;
+            font-size: 13px;
             font-family: inherit;
+            background: white;
         }
         
-        .memo-inline:focus {
+        .memo-right:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -1229,6 +1244,10 @@
                 item.className = 'schedule-item';
                 
                 // ヘッダー部分（時限とクラス）
+                // 左側：時間割情報
+                const leftSection = document.createElement('div');
+                leftSection.className = 'schedule-left';
+                
                 const header = document.createElement('div');
                 header.className = 'schedule-header';
                 
@@ -1249,7 +1268,7 @@
                 
                 header.appendChild(badge);
                 header.appendChild(classInfo);
-                item.appendChild(header);
+                leftSection.appendChild(header);
                 
                 // 授業変更コントロール
                 const controls = document.createElement('div');
@@ -1281,23 +1300,30 @@
                 saveBtn.style.display = dateChanges[i] !== null && dateChanges[i] !== undefined ? 'inline-block' : 'none';
                 saveBtn.onclick = () => saveDayChange(selectedDate, i);
                 
-                // メモをコントロールの中に追加
+                controls.appendChild(changeSelect);
+                controls.appendChild(changeBtn);
+                controls.appendChild(saveBtn);
+                leftSection.appendChild(controls);
+                
+                // 右側：メモ欄
+                const rightSection = document.createElement('div');
+                rightSection.className = 'schedule-right';
+                
                 const memoKey = `${selectedDate}_${i}`;
                 const memoText = memos[memoKey] || '';
                 
                 const memoInput = document.createElement('input');
                 memoInput.type = 'text';
-                memoInput.className = 'memo-inline';
+                memoInput.className = 'memo-right';
                 memoInput.id = `memo_${i}`;
-                memoInput.placeholder = 'メモ...';
+                memoInput.placeholder = 'メモを入力...';
                 memoInput.value = memoText;
                 memoInput.onblur = () => saveMemo(selectedDate, i);
                 
-                controls.appendChild(changeSelect);
-                controls.appendChild(changeBtn);
-                controls.appendChild(saveBtn);
-                controls.appendChild(memoInput);
-                item.appendChild(controls);
+                rightSection.appendChild(memoInput);
+                
+                item.appendChild(leftSection);
+                item.appendChild(rightSection);
                 
                 display.appendChild(item);
             }
