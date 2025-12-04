@@ -221,7 +221,7 @@
         
         .schedule-item {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 400px 1fr;
             gap: 10px;
             padding: 6px;
             background: #f8f9fa;
@@ -271,7 +271,7 @@
             color: white;
             font-weight: 600;
             text-align: center;
-            font-size: 15px;
+            font-size: 17px;
         }
         
         .empty-class {
@@ -1026,21 +1026,21 @@
                 
                 for (let j = 0; j < 5; j++) {
                     const cell = row.insertCell(j + 1);
-                    const select = document.createElement('select');
-                    select.id = `base_${days[j]}_${i}`;
-                    
-                    classes.forEach(className => {
-                        const option = document.createElement('option');
-                        option.value = className;
-                        option.textContent = className || '—';
-                        select.appendChild(option);
-                    });
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = `base_${days[j]}_${i}`;
+                    input.style.width = '100%';
+                    input.style.padding = '8px';
+                    input.style.border = '1px solid #dee2e6';
+                    input.style.borderRadius = '4px';
+                    input.style.fontSize = '14px';
+                    input.placeholder = 'クラスを入力';
                     
                     if (saved[days[j]] && saved[days[j]][i]) {
-                        select.value = saved[days[j]][i];
+                        input.value = saved[days[j]][i];
                     }
                     
-                    cell.appendChild(select);
+                    cell.appendChild(input);
                 }
             }
         }
@@ -1052,8 +1052,8 @@
             days.forEach(day => {
                 timetable[day] = [];
                 for (let i = 0; i < periods; i++) {
-                    const select = document.getElementById(`base_${day}_${i}`);
-                    timetable[day][i] = select.value;
+                    const input = document.getElementById(`base_${day}_${i}`);
+                    timetable[day][i] = input.value;
                 }
             });
             
