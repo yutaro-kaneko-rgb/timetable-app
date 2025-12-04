@@ -221,23 +221,25 @@
         
         .schedule-item {
             display: grid;
-            grid-template-columns: 1fr 300px;
+            grid-template-columns: 1fr 350px;
             gap: 10px;
-            padding: 8px;
+            padding: 6px;
             background: #f8f9fa;
             border-radius: 6px;
             transition: all 0.3s;
+            align-items: center;
         }
         
         .schedule-left {
             display: flex;
-            flex-direction: column;
-            gap: 6px;
+            align-items: center;
+            gap: 10px;
         }
         
         .schedule-right {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            gap: 6px;
         }
         
         .schedule-item:hover {
@@ -248,28 +250,28 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 6px;
+            flex: 1;
         }
         
         .period-badge {
-            min-width: 50px;
-            padding: 6px 10px;
+            min-width: 45px;
+            padding: 10px 8px;
             background: #667eea;
             color: white;
             border-radius: 4px;
             font-weight: 600;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .class-badge {
             flex: 1;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 10px 15px;
+            border-radius: 6px;
             color: white;
             font-weight: 600;
             text-align: center;
-            font-size: 14px;
+            font-size: 15px;
         }
         
         .empty-class {
@@ -277,16 +279,15 @@
             color: white;
         }
         
-        .schedule-controls {
+        .memo-controls {
             display: flex;
             gap: 6px;
-            margin-top: 6px;
             align-items: center;
         }
         
-        .schedule-controls select {
+        .memo-controls select {
             flex: 1;
-            padding: 5px;
+            padding: 6px;
             border: 2px solid #e9ecef;
             border-radius: 4px;
             font-size: 13px;
@@ -300,6 +301,7 @@
             font-size: 13px;
             font-family: inherit;
             background: white;
+            min-height: 36px;
         }
         
         .memo-right:focus {
@@ -1266,13 +1268,30 @@
                     classInfo.classList.add('empty-class');
                 }
                 
-                header.appendChild(badge);
-                header.appendChild(classInfo);
-                leftSection.appendChild(header);
+                leftSection.appendChild(badge);
+                leftSection.appendChild(classInfo);
                 
-                // 授業変更コントロール
-                const controls = document.createElement('div');
-                controls.className = 'schedule-controls';
+                // 右側：メモと変更ボタン
+                const rightSection = document.createElement('div');
+                rightSection.className = 'schedule-right';
+                
+                // メモ入力欄
+                const memoKey = `${selectedDate}_${i}`;
+                const memoText = memos[memoKey] || '';
+                
+                const memoInput = document.createElement('input');
+                memoInput.type = 'text';
+                memoInput.className = 'memo-right';
+                memoInput.id = `memo_${i}`;
+                memoInput.placeholder = 'メモを入力...';
+                memoInput.value = memoText;
+                memoInput.onblur = () => saveMemo(selectedDate, i);
+                
+                rightSection.appendChild(memoInput);
+                
+                // 変更コントロール
+                const memoControls = document.createElement('div');
+                memoControls.className = 'memo-controls';
                 
                 const changeSelect = document.createElement('select');
                 changeSelect.id = `day_change_${i}`;
@@ -1300,27 +1319,10 @@
                 saveBtn.style.display = dateChanges[i] !== null && dateChanges[i] !== undefined ? 'inline-block' : 'none';
                 saveBtn.onclick = () => saveDayChange(selectedDate, i);
                 
-                controls.appendChild(changeSelect);
-                controls.appendChild(changeBtn);
-                controls.appendChild(saveBtn);
-                leftSection.appendChild(controls);
-                
-                // 右側：メモ欄
-                const rightSection = document.createElement('div');
-                rightSection.className = 'schedule-right';
-                
-                const memoKey = `${selectedDate}_${i}`;
-                const memoText = memos[memoKey] || '';
-                
-                const memoInput = document.createElement('input');
-                memoInput.type = 'text';
-                memoInput.className = 'memo-right';
-                memoInput.id = `memo_${i}`;
-                memoInput.placeholder = 'メモを入力...';
-                memoInput.value = memoText;
-                memoInput.onblur = () => saveMemo(selectedDate, i);
-                
-                rightSection.appendChild(memoInput);
+                memoControls.appendChild(changeSelect);
+                memoControls.appendChild(changeBtn);
+                memoControls.appendChild(saveBtn);
+                rightSection.appendChild(memoControls);
                 
                 item.appendChild(leftSection);
                 item.appendChild(rightSection);
