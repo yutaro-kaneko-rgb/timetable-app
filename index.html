@@ -712,6 +712,9 @@
         }
         
         // リアルタイム同期を設定
+        let lastSyncTime = Date.now();
+        let isFirstSync = true;
+        
         function setupRealtimeSync() {
             if (!isFirebaseConfigured) return;
             
@@ -719,13 +722,22 @@
             
             // 基本時間割の変更を監視
             db.collection('timetables').doc('base').onSnapshot((doc) => {
+                if (isFirstSync) {
+                    console.log('初回データ読み込み（リロードなし）');
+                    return;
+                }
+                
                 if (doc.exists) {
                     const data = doc.data();
-                    if (data.lastModifiedBy !== deviceId) {
+                    const now = Date.now();
+                    
+                    if (data.lastModifiedBy !== deviceId && (now - lastSyncTime) > 3000) {
                         console.log('基本時間割が他のデバイスで更新されました');
                         localStorage.setItem('baseTimetable', JSON.stringify(data.schedule || {}));
+                        lastSyncTime = now;
+                        
                         if (currentView === 'day' || currentView === 'week' || currentView === 'base') {
-                            location.reload();
+                            updateDisplay();
                         }
                     }
                 }
@@ -733,13 +745,21 @@
             
             // 授業変更の変更を監視
             db.collection('timetables').doc('changes').onSnapshot((doc) => {
+                if (isFirstSync) {
+                    return;
+                }
+                
                 if (doc.exists) {
                     const data = doc.data();
-                    if (data.lastModifiedBy !== deviceId) {
+                    const now = Date.now();
+                    
+                    if (data.lastModifiedBy !== deviceId && (now - lastSyncTime) > 3000) {
                         console.log('授業変更が他のデバイスで更新されました');
                         localStorage.setItem('timetableChanges', JSON.stringify(data.changes || {}));
+                        lastSyncTime = now;
+                        
                         if (currentView === 'day' || currentView === 'week' || currentView === 'change') {
-                            location.reload();
+                            updateDisplay();
                         }
                     }
                 }
@@ -747,17 +767,41 @@
             
             // 色設定の変更を監視
             db.collection('timetables').doc('colors').onSnapshot((doc) => {
+                if (isFirstSync) {
+                    isFirstSync = false;
+                    return;
+                }
+                
                 if (doc.exists) {
                     const data = doc.data();
-                    if (data.lastModifiedBy !== deviceId) {
+                    const now = Date.now();
+                    
+                    if (data.lastModifiedBy !== deviceId && (now - lastSyncTime) > 3000) {
                         console.log('色設定が他のデバイスで更新されました');
                         localStorage.setItem('classColors', JSON.stringify(data.colors || defaultColors));
+                        lastSyncTime = now;
+                        
                         if (currentView === 'day' || currentView === 'week' || currentView === 'colors') {
-                            location.reload();
+                            updateDisplay();
                         }
                     }
                 }
             });
+        }
+        
+        // 表示を更新（リロードなし）
+        function updateDisplay() {
+            if (currentView === 'day') {
+                displayDaySchedule();
+            } else if (currentView === 'week') {
+                displayWeekSchedule();
+            } else if (currentView === 'base') {
+                initBaseTimetable();
+            } else if (currentView === 'change') {
+                loadDateTimetable();
+            } else if (currentView === 'colors') {
+                loadColors();
+            }
         }
         
         // Firebaseに保存
