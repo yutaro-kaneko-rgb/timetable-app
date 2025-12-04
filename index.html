@@ -216,11 +216,11 @@
         /* 日別表示スタイル */
         .schedule-display {
             display: grid;
-            gap: 15px;
+            gap: 10px;
         }
         
         .schedule-item {
-            padding: 15px;
+            padding: 12px;
             background: #f8f9fa;
             border-radius: 8px;
             transition: all 0.3s;
@@ -276,25 +276,23 @@
         }
         
         .memo-section {
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 8px;
+            padding: 8px;
             background: white;
             border-radius: 6px;
             border: 1px solid #e9ecef;
         }
         
-        .memo-section textarea {
+        .memo-section input[type="text"] {
             width: 100%;
-            padding: 8px;
+            padding: 6px 10px;
             border: 1px solid #dee2e6;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
             font-family: inherit;
-            resize: vertical;
-            min-height: 60px;
         }
         
-        .memo-section textarea:focus {
+        .memo-section input[type="text"]:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -1300,13 +1298,14 @@
                 const memoKey = `${selectedDate}_${i}`;
                 const memoText = memos[memoKey] || '';
                 
-                const memoTextarea = document.createElement('textarea');
-                memoTextarea.id = `memo_${i}`;
-                memoTextarea.placeholder = 'メモを入力...';
-                memoTextarea.value = memoText;
-                memoTextarea.onblur = () => saveMemo(selectedDate, i);
+                const memoInput = document.createElement('input');
+                memoInput.type = 'text';
+                memoInput.id = `memo_${i}`;
+                memoInput.placeholder = 'メモを入力...';
+                memoInput.value = memoText;
+                memoInput.onblur = () => saveMemo(selectedDate, i);
                 
-                memoSection.appendChild(memoTextarea);
+                memoSection.appendChild(memoInput);
                 item.appendChild(memoSection);
                 
                 display.appendChild(item);
@@ -1359,16 +1358,16 @@
         
         // メモを保存
         async function saveMemo(dateStr, periodIndex) {
-            const textarea = document.getElementById(`memo_${periodIndex}`);
-            if (!textarea) return;
+            const memoInput = document.getElementById(`memo_${periodIndex}`);
+            if (!memoInput) return;
             
             const memos = JSON.parse(localStorage.getItem('classMemos') || '{}');
             const memoKey = `${dateStr}_${periodIndex}`;
             
-            if (textarea.value.trim() === '') {
+            if (memoInput.value.trim() === '') {
                 delete memos[memoKey];
             } else {
-                memos[memoKey] = textarea.value;
+                memos[memoKey] = memoInput.value;
             }
             
             localStorage.setItem('classMemos', JSON.stringify(memos));
