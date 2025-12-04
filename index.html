@@ -118,6 +118,38 @@
             display: block;
         }
         
+        /* 日別表示ナビゲーション */
+        .day-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .day-nav button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .day-nav button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .day-nav h2 {
+            font-size: 24px;
+            color: #333;
+        }
+        
         /* 共通スタイル */
         .date-selector {
             margin-bottom: 20px;
@@ -167,6 +199,20 @@
             transform: translateY(-2px);
         }
         
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
         /* 日別表示スタイル */
         .schedule-display {
             display: grid;
@@ -174,9 +220,6 @@
         }
         
         .schedule-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
             padding: 15px;
             background: #f8f9fa;
             border-radius: 8px;
@@ -184,8 +227,14 @@
         }
         
         .schedule-item:hover {
-            transform: translateX(5px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .schedule-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
         }
         
         .period-badge {
@@ -210,6 +259,44 @@
         .empty-class {
             background: #adb5bd !important;
             color: white;
+        }
+        
+        .schedule-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .schedule-controls select {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .memo-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .memo-section textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .memo-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
         }
         
         /* 週間表示スタイル */
@@ -411,6 +498,15 @@
                 padding: 12px 8px;
                 min-width: 100px;
             }
+            
+            .day-nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .day-nav h2 {
+                font-size: 18px;
+            }
         }
     </style>
 </head>
@@ -436,12 +532,11 @@
         <div class="content">
             <!-- 日別表示 -->
             <div id="dayView" class="view-section active">
-                <div class="date-selector">
-                    <label for="viewDate">日付を選択：</label>
-                    <input type="date" id="viewDate">
-                    <button class="btn btn-primary" onclick="displayDaySchedule()">表示</button>
+                <div class="day-nav">
+                    <button onclick="previousDay()">← 前日</button>
+                    <h2 id="displayDateTitle"></h2>
+                    <button onclick="nextDay()">翌日 →</button>
                 </div>
-                <h2 id="displayDateTitle" style="margin-bottom: 20px; color: #333;"></h2>
                 <div class="schedule-display" id="scheduleDisplay"></div>
             </div>
             
@@ -552,6 +647,9 @@
         // 現在の表示モード
         let currentView = 'day';
         
+        // 現在の表示日付（日別表示用）
+        let currentDisplayDate = null;
+        
         // 日本時間で今日の日付を取得する関数
         function getTodayJST() {
             const now = new Date();
@@ -590,22 +688,42 @@
             const today = getTodayJST();
             console.log('今日の日付（JST）:', today);
             
+            currentDisplayDate = today;
             document.getElementById('changeDate').value = today;
-            document.getElementById('viewDate').value = today;
-            
-            // 今週の月曜日を計算（日本時間）
-            const todayDate = new Date(today + 'T00:00:00');
-            const dayOfWeek = todayDate.getDay();
-            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-            const monday = new Date(todayDate);
-            monday.setDate(todayDate.getDate() + diff);
-            
-            const mondayStr = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
-            document.getElementById('weekStartDate').value = mondayStr;
+            document.getElementById('weekStartDate').value = getMonday(today);
             
             // 初回表示
             displayDaySchedule();
         });
+        
+        // 月曜日を取得
+        function getMonday(dateStr) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            const dayOfWeek = date.getDay();
+            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            date.setDate(date.getDate() + diff);
+            
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+        
+        // 前日へ
+        function previousDay() {
+            const [year, month, day] = currentDisplayDate.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() - 1);
+            currentDisplayDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            displayDaySchedule();
+        }
+        
+        // 翌日へ
+        function nextDay() {
+            const [year, month, day] = currentDisplayDate.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() + 1);
+            currentDisplayDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            displayDaySchedule();
+        }
         
         // Firebaseを初期化
         function initializeFirebase(config) {
@@ -684,6 +802,14 @@
                     const data = changesDoc.data();
                     localStorage.setItem('timetableChanges', JSON.stringify(data.changes || {}));
                     console.log('授業変更を同期しました');
+                }
+                
+                // メモを取得
+                const memosDoc = await db.collection('timetables').doc('memos').get();
+                if (memosDoc.exists) {
+                    const data = memosDoc.data();
+                    localStorage.setItem('classMemos', JSON.stringify(data.memos || {}));
+                    console.log('メモを同期しました');
                 }
                 
                 // 色設定を取得
@@ -765,6 +891,28 @@
                 }
             });
             
+            // メモの変更を監視
+            db.collection('timetables').doc('memos').onSnapshot((doc) => {
+                if (isFirstSync) {
+                    return;
+                }
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    const now = Date.now();
+                    
+                    if (data.lastModifiedBy !== deviceId && (now - lastSyncTime) > 3000) {
+                        console.log('メモが他のデバイスで更新されました');
+                        localStorage.setItem('classMemos', JSON.stringify(data.memos || {}));
+                        lastSyncTime = now;
+                        
+                        if (currentView === 'day') {
+                            updateDisplay();
+                        }
+                    }
+                }
+            });
+            
             // 色設定の変更を監視
             db.collection('timetables').doc('colors').onSnapshot((doc) => {
                 if (isFirstSync) {
@@ -805,7 +953,7 @@
         }
         
         // Firebaseに保存
-        async function saveToFirebase(docName, data) {
+        async function saveToFirebase(docName, dataObj) {
             if (!isFirebaseConfigured) {
                 console.warn('Firebaseが設定されていません');
                 return false;
@@ -813,7 +961,7 @@
             
             try {
                 await db.collection('timetables').doc(docName).set({
-                    ...data,
+                    ...dataObj,
                     lastModified: firebase.firestore.FieldValue.serverTimestamp(),
                     lastModifiedBy: deviceId
                 });
@@ -1059,13 +1207,7 @@
         
         // 日別スケジュールを表示
         function displayDaySchedule() {
-            const dateInput = document.getElementById('viewDate');
-            const selectedDate = dateInput.value;
-            
-            if (!selectedDate) {
-                alert('日付を選択してください');
-                return;
-            }
+            const selectedDate = currentDisplayDate;
             
             const [year, month, day] = selectedDate.split('-').map(Number);
             const date = new Date(year, month - 1, day);
@@ -1078,17 +1220,24 @@
             const display = document.getElementById('scheduleDisplay');
             display.innerHTML = '';
             
-            if (schedule.length === 0 || schedule.every(item => !item)) {
-                display.innerHTML = '<div style="padding: 40px; text-align: center; color: #6c757d;"><h3>この日の予定はありません</h3></div>';
+            if (dayOfWeek === '土' || dayOfWeek === '日') {
+                display.innerHTML = '<div style="padding: 40px; text-align: center; color: #6c757d;"><h3>この日は授業がありません（土日）</h3></div>';
                 return;
             }
             
             const colors = JSON.parse(localStorage.getItem('classColors') || JSON.stringify(defaultColors));
+            const memos = JSON.parse(localStorage.getItem('classMemos') || '{}');
+            const changes = JSON.parse(localStorage.getItem('timetableChanges') || '{}');
+            const dateChanges = changes[selectedDate] || {};
             
             for (let i = 0; i < periods; i++) {
                 const cls = schedule[i] || '';
                 const item = document.createElement('div');
                 item.className = 'schedule-item';
+                
+                // ヘッダー部分（時限とクラス）
+                const header = document.createElement('div');
+                header.className = 'schedule-header';
                 
                 const badge = document.createElement('div');
                 badge.className = 'period-badge';
@@ -1105,10 +1254,125 @@
                     classInfo.classList.add('empty-class');
                 }
                 
-                item.appendChild(badge);
-                item.appendChild(classInfo);
+                header.appendChild(badge);
+                header.appendChild(classInfo);
+                item.appendChild(header);
+                
+                // 授業変更コントロール
+                const controls = document.createElement('div');
+                controls.className = 'schedule-controls';
+                
+                const changeSelect = document.createElement('select');
+                changeSelect.id = `day_change_${i}`;
+                changeSelect.style.display = dateChanges[i] !== null && dateChanges[i] !== undefined ? 'block' : 'none';
+                
+                classes.forEach(className => {
+                    const option = document.createElement('option');
+                    option.value = className;
+                    option.textContent = className || '—';
+                    changeSelect.appendChild(option);
+                });
+                
+                if (dateChanges[i] !== null && dateChanges[i] !== undefined) {
+                    changeSelect.value = dateChanges[i];
+                }
+                
+                const changeBtn = document.createElement('button');
+                changeBtn.className = 'btn btn-secondary btn-small';
+                changeBtn.textContent = dateChanges[i] !== null && dateChanges[i] !== undefined ? '元に戻す' : '変更';
+                changeBtn.onclick = () => toggleDayChange(selectedDate, i);
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'btn btn-primary btn-small';
+                saveBtn.textContent = '保存';
+                saveBtn.style.display = dateChanges[i] !== null && dateChanges[i] !== undefined ? 'inline-block' : 'none';
+                saveBtn.onclick = () => saveDayChange(selectedDate, i);
+                
+                controls.appendChild(changeSelect);
+                controls.appendChild(changeBtn);
+                controls.appendChild(saveBtn);
+                item.appendChild(controls);
+                
+                // メモセクション
+                const memoSection = document.createElement('div');
+                memoSection.className = 'memo-section';
+                
+                const memoKey = `${selectedDate}_${i}`;
+                const memoText = memos[memoKey] || '';
+                
+                const memoTextarea = document.createElement('textarea');
+                memoTextarea.id = `memo_${i}`;
+                memoTextarea.placeholder = 'メモを入力...';
+                memoTextarea.value = memoText;
+                memoTextarea.onblur = () => saveMemo(selectedDate, i);
+                
+                memoSection.appendChild(memoTextarea);
+                item.appendChild(memoSection);
+                
                 display.appendChild(item);
             }
+        }
+        
+        // 日別表示での授業変更トグル
+        function toggleDayChange(dateStr, periodIndex) {
+            const changes = JSON.parse(localStorage.getItem('timetableChanges') || '{}');
+            
+            if (!changes[dateStr]) {
+                changes[dateStr] = Array(periods).fill(null);
+            }
+            
+            if (changes[dateStr][periodIndex] !== null && changes[dateStr][periodIndex] !== undefined) {
+                // 元に戻す
+                changes[dateStr][periodIndex] = null;
+                if (changes[dateStr].every(item => item === null)) {
+                    delete changes[dateStr];
+                }
+            } else {
+                // 変更モードにする
+                const schedule = getTimetableForDate(dateStr);
+                changes[dateStr][periodIndex] = schedule[periodIndex] || '';
+            }
+            
+            localStorage.setItem('timetableChanges', JSON.stringify(changes));
+            displayDaySchedule();
+        }
+        
+        // 日別表示での授業変更保存
+        async function saveDayChange(dateStr, periodIndex) {
+            const select = document.getElementById(`day_change_${periodIndex}`);
+            if (!select) return;
+            
+            const changes = JSON.parse(localStorage.getItem('timetableChanges') || '{}');
+            
+            if (!changes[dateStr]) {
+                changes[dateStr] = Array(periods).fill(null);
+            }
+            
+            changes[dateStr][periodIndex] = select.value;
+            
+            localStorage.setItem('timetableChanges', JSON.stringify(changes));
+            await saveToFirebase('changes', { changes: changes });
+            
+            alert('保存しました！');
+            displayDaySchedule();
+        }
+        
+        // メモを保存
+        async function saveMemo(dateStr, periodIndex) {
+            const textarea = document.getElementById(`memo_${periodIndex}`);
+            if (!textarea) return;
+            
+            const memos = JSON.parse(localStorage.getItem('classMemos') || '{}');
+            const memoKey = `${dateStr}_${periodIndex}`;
+            
+            if (textarea.value.trim() === '') {
+                delete memos[memoKey];
+            } else {
+                memos[memoKey] = textarea.value;
+            }
+            
+            localStorage.setItem('classMemos', JSON.stringify(memos));
+            await saveToFirebase('memos', { memos: memos });
         }
         
         // 週間予定を表示
