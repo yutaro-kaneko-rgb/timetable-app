@@ -267,6 +267,7 @@
             display: flex;
             gap: 6px;
             margin-top: 6px;
+            align-items: center;
         }
         
         .schedule-controls select {
@@ -277,16 +278,8 @@
             font-size: 13px;
         }
         
-        .memo-section {
-            margin-top: 5px;
-            padding: 5px;
-            background: white;
-            border-radius: 4px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .memo-section input[type="text"] {
-            width: 100%;
+        .memo-inline {
+            flex: 2;
             padding: 4px 8px;
             border: 1px solid #dee2e6;
             border-radius: 3px;
@@ -294,7 +287,7 @@
             font-family: inherit;
         }
         
-        .memo-section input[type="text"]:focus {
+        .memo-inline:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -1288,27 +1281,23 @@
                 saveBtn.style.display = dateChanges[i] !== null && dateChanges[i] !== undefined ? 'inline-block' : 'none';
                 saveBtn.onclick = () => saveDayChange(selectedDate, i);
                 
-                controls.appendChild(changeSelect);
-                controls.appendChild(changeBtn);
-                controls.appendChild(saveBtn);
-                item.appendChild(controls);
-                
-                // メモセクション
-                const memoSection = document.createElement('div');
-                memoSection.className = 'memo-section';
-                
+                // メモをコントロールの中に追加
                 const memoKey = `${selectedDate}_${i}`;
                 const memoText = memos[memoKey] || '';
                 
                 const memoInput = document.createElement('input');
                 memoInput.type = 'text';
+                memoInput.className = 'memo-inline';
                 memoInput.id = `memo_${i}`;
-                memoInput.placeholder = 'メモを入力...';
+                memoInput.placeholder = 'メモ...';
                 memoInput.value = memoText;
                 memoInput.onblur = () => saveMemo(selectedDate, i);
                 
-                memoSection.appendChild(memoInput);
-                item.appendChild(memoSection);
+                controls.appendChild(changeSelect);
+                controls.appendChild(changeBtn);
+                controls.appendChild(saveBtn);
+                controls.appendChild(memoInput);
+                item.appendChild(controls);
                 
                 display.appendChild(item);
             }
