@@ -275,8 +275,9 @@
         }
         
         .empty-class {
-            background: #adb5bd !important;
-            color: white;
+            background: white !important;
+            border: 2px solid #e9ecef;
+            color: transparent;
         }
         
         .memo-controls {
@@ -1264,8 +1265,9 @@
                     classInfo.textContent = `英語 - ${cls}`;
                     classInfo.style.background = colors[cls] || defaultColors[cls] || '#6c757d';
                 } else {
-                    classInfo.textContent = '空きコマ';
+                    classInfo.textContent = '';
                     classInfo.classList.add('empty-class');
+                    classInfo.style.minHeight = '40px';
                 }
                 
                 leftSection.appendChild(badge);
