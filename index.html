@@ -266,12 +266,12 @@
         
         .class-badge {
             flex: 1;
-            padding: 10px 15px;
+            padding: 15px 20px;
             border-radius: 6px;
             color: white;
             font-weight: 600;
             text-align: center;
-            font-size: 17px;
+            font-size: 20px;
         }
         
         .empty-class {
@@ -1265,12 +1265,12 @@
                 classInfo.className = 'class-badge';
                 
                 if (cls) {
-                    classInfo.textContent = `英語 - ${cls}`;
+                    classInfo.textContent = cls;
                     classInfo.style.background = colors[cls] || defaultColors[cls] || '#6c757d';
                 } else {
                     classInfo.textContent = '';
                     classInfo.classList.add('empty-class');
-                    classInfo.style.minHeight = '40px';
+                    classInfo.style.minHeight = '50px';
                 }
                 
                 leftSection.appendChild(badge);
