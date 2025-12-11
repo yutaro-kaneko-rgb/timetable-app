@@ -652,6 +652,20 @@
             '3-1': '#38f9d7'
         };
         
+        // クラス名から自動的に色を生成
+        function generateColorForClass(className) {
+            const colors = [
+                '#667eea', '#f5576c', '#00f2fe', '#38f9d7',
+                '#f093fb', '#4facfe', '#43e97b', '#fa709a',
+                '#30cfd0', '#a8edea', '#fed6e3', '#c471f5'
+            ];
+            let hash = 0;
+            for (let i = 0; i < className.length; i++) {
+                hash = className.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+        }
+        
         // Firebase関連
         let db = null;
         let isFirebaseConfigured = false;
@@ -1266,7 +1280,8 @@
                 
                 if (cls) {
                     classInfo.textContent = cls;
-                    classInfo.style.background = colors[cls] || defaultColors[cls] || '#6c757d';
+                    const color = colors[cls] || defaultColors[cls] || generateColorForClass(cls);
+                    classInfo.style.background = color;
                 } else {
                     classInfo.textContent = '';
                     classInfo.classList.add('empty-class');
@@ -1518,7 +1533,8 @@
                         const badge = document.createElement('div');
                         badge.className = 'class-badge';
                         badge.textContent = cls;
-                        badge.style.background = colors[cls] || defaultColors[cls] || '#6c757d';
+                        const color = colors[cls] || defaultColors[cls] || generateColorForClass(cls);
+                        badge.style.background = color;
                         badge.style.fontSize = '12px';
                         badge.style.padding = '6px 10px';
                         cell.appendChild(badge);
@@ -1537,8 +1553,23 @@
             container.innerHTML = '';
             
             const colors = JSON.parse(localStorage.getItem('classColors') || JSON.stringify(defaultColors));
+            const baseTimetable = JSON.parse(localStorage.getItem('baseTimetable') || '{}');
             
-            classes.slice(1).forEach(className => {
+            // 基本時間割から全てのクラスを収集
+            const allClasses = new Set();
+            Object.values(baseTimetable).forEach(daySchedule => {
+                daySchedule.forEach(cls => {
+                    if (cls && cls.trim() !== '') {
+                        allClasses.add(cls);
+                    }
+                });
+            });
+            
+            // デフォルトクラスも追加
+            classes.slice(1).forEach(cls => allClasses.add(cls));
+            
+            // クラスごとに色設定を表示
+            Array.from(allClasses).sort().forEach(className => {
                 const item = document.createElement('div');
                 item.className = 'color-item';
                 
@@ -1547,8 +1578,9 @@
                 
                 const input = document.createElement('input');
                 input.type = 'color';
-                input.value = colors[className] || defaultColors[className];
-                input.id = `color_${className}`;
+                input.value = colors[className] || defaultColors[className] || generateColorForClass(className);
+                input.id = `color_${className.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                input.dataset.className = className;
                 
                 item.appendChild(label);
                 item.appendChild(input);
@@ -1560,9 +1592,12 @@
         async function saveColors() {
             const newColors = {};
             
-            classes.slice(1).forEach(className => {
-                const input = document.getElementById(`color_${className}`);
-                if (input) {
+            const container = document.getElementById('colorSettings');
+            const inputs = container.querySelectorAll('input[type="color"]');
+            
+            inputs.forEach(input => {
+                const className = input.dataset.className;
+                if (className) {
                     newColors[className] = input.value;
                 }
             });
