@@ -1074,6 +1074,9 @@
             localStorage.setItem('baseTimetable', JSON.stringify(timetable));
             await saveToFirebase('base', { schedule: timetable });
             showMessage('baseMessage');
+            
+            // 色設定をリフレッシュ（削除されたクラスを非表示に）
+            loadColors();
         }
         
         // 授業変更の初期化
@@ -1555,7 +1558,7 @@
             const colors = JSON.parse(localStorage.getItem('classColors') || JSON.stringify(defaultColors));
             const baseTimetable = JSON.parse(localStorage.getItem('baseTimetable') || '{}');
             
-            // 基本時間割から全てのクラスを収集
+            // 基本時間割から実際に使用されているクラスのみを収集
             const allClasses = new Set();
             Object.values(baseTimetable).forEach(daySchedule => {
                 daySchedule.forEach(cls => {
@@ -1565,8 +1568,16 @@
                 });
             });
             
-            // デフォルトクラスも追加
-            classes.slice(1).forEach(cls => allClasses.add(cls));
+            // クラスが一つもない場合はメッセージを表示
+            if (allClasses.size === 0) {
+                const message = document.createElement('p');
+                message.style.color = '#6c757d';
+                message.style.textAlign = 'center';
+                message.style.padding = '20px';
+                message.textContent = '基本時間割を設定すると、ここにクラス別の色設定が表示されます。';
+                container.appendChild(message);
+                return;
+            }
             
             // クラスごとに色設定を表示
             Array.from(allClasses).sort().forEach(className => {
