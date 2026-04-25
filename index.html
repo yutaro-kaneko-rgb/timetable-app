@@ -639,10 +639,62 @@
             appId: "1:1095037674644:web:90c0ee33627fa53be40081"
         };
         
-        // クラス一覧
-        const classes = ['', '1-1', '1-2', '2-1', '3-1'];
+        // クラス一覧（基本時間割から自動収集し、空欄のみ固定で先頭に置く）
+        const classes = [''];
         const periods = 7;
         const days = ['月', '火', '水', '木', '金'];
+        
+        function getClassesFromBaseTimetable() {
+            const baseTimetable = JSON.parse(localStorage.getItem('baseTimetable') || '{}');
+            const collectedClasses = new Set();
+            
+            Object.values(baseTimetable).forEach(daySchedule => {
+                if (!Array.isArray(daySchedule)) return;
+                
+                daySchedule.forEach(className => {
+                    const normalizedClassName = (className || '').trim();
+                    if (normalizedClassName) {
+                        collectedClasses.add(normalizedClassName);
+                    }
+                });
+            });
+            
+            return Array.from(collectedClasses).sort((a, b) => a.localeCompare(b, 'ja'));
+        }
+        
+        function getSelectableClasses(additionalClasses = []) {
+            const classSet = new Set(classes);
+            
+            getClassesFromBaseTimetable().forEach(className => {
+                classSet.add(className);
+            });
+            
+            additionalClasses.forEach(className => {
+                const normalizedClassName = (className || '').trim();
+                if (normalizedClassName) {
+                    classSet.add(normalizedClassName);
+                }
+            });
+            
+            return Array.from(classSet);
+        }
+        
+        function populateClassSelect(selectElement, selectedValue = '') {
+            if (!selectElement) return;
+            
+            const normalizedSelectedValue = (selectedValue || '').trim();
+            const selectableClasses = getSelectableClasses(normalizedSelectedValue ? [normalizedSelectedValue] : []);
+            selectElement.innerHTML = '';
+            
+            selectableClasses.forEach(className => {
+                const option = document.createElement('option');
+                option.value = className;
+                option.textContent = className || '—';
+                selectElement.appendChild(option);
+            });
+            
+            selectElement.value = normalizedSelectedValue;
+        }
         
         // デフォルトの色設定
         const defaultColors = {
@@ -1075,8 +1127,16 @@
             await saveToFirebase('base', { schedule: timetable });
             showMessage('baseMessage');
             
-            // 色設定をリフレッシュ（削除されたクラスを非表示に）
+            // 基本時間割に合わせて授業変更の候補と色設定をリフレッシュ
+            initChangeTimetable();
+            if (document.getElementById('changeDate').value) {
+                loadDateTimetable();
+            }
             loadColors();
+            
+            if (currentView === 'day' || currentView === 'week') {
+                updateDisplay();
+            }
         }
         
         // 授業変更の初期化
@@ -1100,12 +1160,7 @@
                 
                 const select = document.createElement('select');
                 select.id = `change_${i + 1}`;
-                classes.forEach(className => {
-                    const option = document.createElement('option');
-                    option.value = className;
-                    option.textContent = className || '—';
-                    select.appendChild(option);
-                });
+                populateClassSelect(select);
                 cellClass.appendChild(select);
             }
         }
@@ -1172,9 +1227,10 @@
             for (let i = 1; i <= periods; i++) {
                 const select = document.getElementById(`change_${i}`);
                 const checkbox = document.getElementById(`changed_${i}`);
+                const selectedClass = dateChanges[i - 1] ?? schedule[i - 1] ?? '';
                 
                 if (select) {
-                    select.value = schedule[i - 1] || '';
+                    populateClassSelect(select, selectedClass);
                 }
                 
                 if (checkbox) {
@@ -1319,17 +1375,7 @@
                 const changeSelect = document.createElement('select');
                 changeSelect.id = `day_change_${i}`;
                 changeSelect.style.display = dateChanges[i] !== null && dateChanges[i] !== undefined ? 'block' : 'none';
-                
-                classes.forEach(className => {
-                    const option = document.createElement('option');
-                    option.value = className;
-                    option.textContent = className || '—';
-                    changeSelect.appendChild(option);
-                });
-                
-                if (dateChanges[i] !== null && dateChanges[i] !== undefined) {
-                    changeSelect.value = dateChanges[i];
-                }
+                populateClassSelect(changeSelect, dateChanges[i] ?? cls ?? '');
                 
                 const changeBtn = document.createElement('button');
                 changeBtn.className = 'btn btn-secondary btn-small';
@@ -1556,17 +1602,7 @@
             container.innerHTML = '';
             
             const colors = JSON.parse(localStorage.getItem('classColors') || JSON.stringify(defaultColors));
-            const baseTimetable = JSON.parse(localStorage.getItem('baseTimetable') || '{}');
-            
-            // 基本時間割から実際に使用されているクラスのみを収集
-            const allClasses = new Set();
-            Object.values(baseTimetable).forEach(daySchedule => {
-                daySchedule.forEach(cls => {
-                    if (cls && cls.trim() !== '') {
-                        allClasses.add(cls);
-                    }
-                });
-            });
+            const allClasses = new Set(getClassesFromBaseTimetable());
             
             // クラスが一つもない場合はメッセージを表示
             if (allClasses.size === 0) {
